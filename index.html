@@ -7,16 +7,9 @@
     <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="style.css">
     
-    <script src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
     <script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
 </head>
 <body>
-
-    <div id="auth-section" class="card">
-        <h1>🔐 Beveiligde App</h1>
-        <p>Log in met je account. Nieuwe gebruikers moeten eerst worden goedgekeurd door de beheerder.</p>
-        <button onclick="netlifyIdentity.open()" class="btn-primary">Inloggen / Registreren</button>
-    </div>
 
     <div id="install-instructions" class="card hidden">
         <h1>📲 Installeer de App</h1>
@@ -28,16 +21,15 @@
 
     <div id="permission-section" class="card hidden">
         <h1>🔔 Meldingen</h1>
-        <p>Je bent ingelogd! Zet nu je meldingen aan om updates te ontvangen.</p>
+        <p>Zet nu je meldingen aan om updates te ontvangen.</p>
         <button id="enable-btn" class="btn-primary">Meld je aan voor meldingen</button>
     </div>
 
     <div id="homepage" class="hidden">
         <div class="card">
             <div class="header-flex">
-                <h2 id="welcome-text" style="margin:0;">👋 Welkom</h2>
-                <button onclick="logout()" class="btn-logout">Uitloggen</button>
-            </div>
+                <h2 style="margin:0;">🏠 Welkom</h2>
+                </div>
         </div>
 
         <div class="card">
@@ -51,29 +43,13 @@
     <script>
         const ONESIGNAL_APP_ID = "34b6e89d-0d33-405e-8ee4-76ef90fa699a";
 
-        // --- AUTH INITIALISATIE ---
-        netlifyIdentity.on('init', user => {
-            if (!user) {
-                showSection('auth-section');
-            } else {
-                checkAccess(user);
-            }
-        });
-
-        netlifyIdentity.on('login', user => {
-            netlifyIdentity.close();
-            checkAccess(user);
-        });
-
-        function logout() {
-            netlifyIdentity.logout();
-            location.reload();
-        }
+        // Start direct met de controle zodra de pagina geladen is
+        window.onload = () => {
+            checkAccess();
+        };
 
         // --- FLOW CONTROLE ---
-        function checkAccess(user) {
-            document.getElementById('welcome-text').innerText = `👋 ${user.user_metadata.full_name || 'Gebruiker'}`;
-            
+        function checkAccess() {
             // Controleer of de app op het startscherm staat (PWA mode)
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
             
@@ -87,13 +63,12 @@
             }
         }
 
-        // --- ONESIGNAL MET GEHEUGEN ---
+        // --- ONESIGNAL ---
         function initOneSignal() {
             window.OneSignalDeferred = window.OneSignalDeferred || [];
             OneSignalDeferred.push(async function(OneSignal) {
                 await OneSignal.init({ appId: ONESIGNAL_APP_ID });
 
-                // Check of de browser al toestemming heeft OF OneSignal al geabonneerd is
                 const isOptedIn = OneSignal.User.PushSubscription.optedIn;
                 const permission = Notification.permission;
 
@@ -108,10 +83,8 @@
 
         document.getElementById('enable-btn').addEventListener('click', () => {
             OneSignalDeferred.push(async (OneSignal) => {
-                // Forceer de browser prompt
                 await OneSignal.Slidedown.promptPush();
                 
-                // Controleer na 2 seconden of het gelukt is
                 setTimeout(() => {
                     if (Notification.permission === "granted") {
                         showSection('homepage');
@@ -122,13 +95,14 @@
         });
 
         function showSection(id) {
-            ['auth-section', 'install-instructions', 'permission-section', 'homepage'].forEach(s => {
-                document.getElementById(s).classList.add('hidden');
+            ['install-instructions', 'permission-section', 'homepage'].forEach(s => {
+                const el = document.getElementById(s);
+                if (el) el.classList.add('hidden');
             });
             document.getElementById(id).classList.remove('hidden');
         }
 
-        // --- DATABASE LOGICA ---
+        // --- DATABASE LOGICA (Ongewijzigd) ---
         function loadFromDB() {
             const request = indexedDB.open("NotificationHistory", 1);
             request.onupgradeneeded = (e) => {
