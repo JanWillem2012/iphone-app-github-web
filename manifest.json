@@ -1,0 +1,21 @@
+{
+  "name": "Mijn App",
+  "short_name": "App",
+  "theme_color": "#007bff",
+  "background_color": "#ffffff",
+  "display": "standalone",
+  "scope": "/",
+  "start_url": "/",
+  "icons": [
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1828/1828665.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://cdn-icons-png.flaticon.com/512/1828/1828665.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
